@@ -3,7 +3,9 @@
 // Vojtech Zmatlo (xzmatlv00), 10/2024
 
 // TODO 
-// hledani podle pismen
+// testovani
+// komentare
+// prerusene posloupnosti znaku
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -32,6 +34,7 @@ void resetCounters(int *lenghtCounter, int* lineCounter, char *contactArray)
 }
 
 bool isAdequateCharacter(char contactCharacter, char sequenceCharacter) {
+  // returns if the contactCharacter is the same as sequenceCharacter in t9
   if (contactCharacter==sequenceCharacter) return 1;
 
   int numberFromSequence = sequenceCharacter-'0';
@@ -47,7 +50,7 @@ bool isAdequateCharacter(char contactCharacter, char sequenceCharacter) {
   return 0;
 }
 
-bool isSuitable(char contact[], char sequenceToFind[]) 
+bool isSuitable(char contact[], char sequenceToFind[], bool mustBeSubsequent) 
 // Returns whether contact contains given sequence
 {
   
@@ -57,9 +60,24 @@ bool isSuitable(char contact[], char sequenceToFind[])
   while (contact[++contactLenght]!=0);
   for (int i=0;i<contactLenght-sequenceLenght;i++) {
     if (isAdequateCharacter(tolower(contact[i]),sequenceToFind[0])) {
+      int k=0;
       for (int j=1;j<=sequenceLenght;j++) {
         if (j==sequenceLenght) return 1; // when whole sequence is found
-        if (!isAdequateCharacter(contact[i+j], sequenceToFind[j])) break;
+        if (mustBeSubsequent) {
+          if (!isAdequateCharacter(tolower(contact[i+j]), sequenceToFind[j])) break;
+        }
+        else {
+          bool newLine = 0;
+          while (!isAdequateCharacter(tolower(contact[i+j+k]), sequenceToFind[j])) {
+            k++;
+            if (contact[i+j+k]==0) return 0;
+            if (contact[i+j+k]==' ') {
+              newLine = 1;
+              break;
+            }
+          }
+          if (newLine) break;
+        }
       }
     }
   }
@@ -67,11 +85,12 @@ bool isSuitable(char contact[], char sequenceToFind[])
   return 0;
 }
 
-bool handleContact(char contact[], char sequenceToFind[], int *lenght, int *lines) 
+bool handleContact
+  (char contact[], char sequenceToFind[], int *lenght, int *lines, bool mustBeSubsequent) 
 // handles contact for printing, resets temp variables
 {
   bool suitable = 0;
-  if (isSuitable(contact, sequenceToFind)) {
+  if (isSuitable(contact, sequenceToFind, mustBeSubsequent)) {
     contact[++*lenght] = 0;
     printf("%s\n", contact);
     suitable = 1;
@@ -81,7 +100,7 @@ bool handleContact(char contact[], char sequenceToFind[], int *lenght, int *line
 }
 
 
-int findSuitableContacts(char sequenceToFind[])
+int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
 // loops through input string, splits it into contacts and calls handleContact on each
 {
   bool isSomeContactSuitable = 0;
@@ -105,7 +124,8 @@ int findSuitableContacts(char sequenceToFind[])
       contactLines++;
     }
     if (contactLines>2) {
-      isCurrentContactSuitable = handleContact(currentContact, sequenceToFind, &contactLenght, &contactLines);
+      isCurrentContactSuitable = handleContact(
+        currentContact, sequenceToFind, &contactLenght, &contactLines, mustBeSubsequent);
       isSomeContactSuitable = (isCurrentContactSuitable || isSomeContactSuitable);
       continue;
     }
@@ -115,7 +135,8 @@ int findSuitableContacts(char sequenceToFind[])
     }
   }
 
-  isCurrentContactSuitable = handleContact(currentContact, sequenceToFind, &contactLenght, &contactLines);
+  isCurrentContactSuitable = 
+    handleContact(currentContact, sequenceToFind, &contactLenght, &contactLines, mustBeSubsequent);
   isSomeContactSuitable = (isCurrentContactSuitable || isSomeContactSuitable);
 
   return isSomeContactSuitable;
@@ -129,7 +150,15 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  int inputValidity = findSuitableContacts(argv[1]);
+  int inputValidity;
+
+  if (argc == 3 && !strcmp(argv[1], "-s")) {
+    inputValidity = findSuitableContacts(argv[2], 0);
+  } else {
+    inputValidity = findSuitableContacts(argv[1], 1);
+
+  }
+
   if (!inputValidity) printf("Not found\n");  
 
   return inputValidity;
