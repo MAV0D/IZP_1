@@ -4,7 +4,6 @@
 
 // TODO 
 // testovani
-// kontrola jestli parametr je cislo, TEL CISLO je cislo, JMENO jsou znaky
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -151,7 +150,7 @@ int printAllContacts()
     // handle longer line or contact than expected
     if (contactLenght>200||lineLenght>100) {
       fprintf(stderr, "Invalid input data. \n");
-      return -1;
+      return 2;
     }
   }
 
@@ -163,6 +162,15 @@ int printAllContacts()
 int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
 // loops through input string, splits it into contacts and calls handleContact on each
 {
+  // check if sequenceToFind is numeric only
+  int sequenceLenght=strlen(sequenceToFind);
+  for (int i=0;i<sequenceLenght;i++) {
+    if (!isdigit(sequenceToFind[i])) {
+      fprintf(stderr, "Invalid argument, must be number");
+      return 3;
+    }
+  }
+
   // variable initialization
   bool isSomeContactSuitable = 0;
   bool isCurrentContactSuitable = 0;
@@ -177,9 +185,17 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
   while ((c=getchar())!=EOF)
   // loops through whole input
   {
-    currentContact[contactLenght++]=c;
+    if (contactLines == 1) { // checks if character is number or '+' while reading phone number
+      currentContact[contactLenght++]=c;
+    } else {
+      if (!isdigit(c) && c!='+' && c!='\n') {
+        fprintf(stderr, "Invalid phone number, it can only contain 0-9 and +");
+        return 4;
+      }
+      currentContact[contactLenght++]=c;
+    }
     lineLenght++;
-    if (c=='\n') 
+    if (c=='\n')
     // replace \n character on first line end with ", ", end contact on second line end
     {
       if (contactLines==1) {
@@ -193,7 +209,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
       lineLenght=0;
     }
     
-    if (contactLines>2) 
+    if (contactLines>2)
     // pass contact to handleContact, update isSomeContactSuitable
     {
       isCurrentContactSuitable = handleContact(
@@ -205,7 +221,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
     // handle longer line or contact than expected
     if (contactLenght>200||lineLenght>100) {
       fprintf(stderr, "Invalid input data. \n");
-      return -1;
+      return 2;
     }
   }
 
@@ -221,7 +237,7 @@ int main(int argc, char *argv[]) {
   if (argc>3) // edge case for invalid number of arguments
   {
     fprintf(stderr, "Invalid number of arguments (%i, maximum is 3)", argc);
-    return -1;
+    return 1;
   }
 
   int inputValidity; // variable for storing if input is valid and if some contacts has been found
