@@ -150,7 +150,7 @@ int printAllContacts()
     // handle longer line or contact than expected
     if (contactLenght>200||lineLenght>100) {
       fprintf(stderr, "Invalid input data. \n");
-      return 2;
+      return -1;
     }
   }
 
@@ -167,7 +167,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
   for (int i=0;i<sequenceLenght;i++) {
     if (!isdigit(sequenceToFind[i])) {
       fprintf(stderr, "Invalid argument, must be number");
-      return 3;
+      return -1;
     }
   }
 
@@ -190,7 +190,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
     } else {
       if (!isdigit(c) && c!='+' && c!='\n') {
         fprintf(stderr, "Invalid phone number, it can only contain 0-9 and +");
-        return 4;
+        return -1;
       }
       currentContact[contactLenght++]=c;
     }
@@ -221,7 +221,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
     // handle longer line or contact than expected
     if (contactLenght>200||lineLenght>100) {
       fprintf(stderr, "Invalid input data. \n");
-      return 2;
+      return -1;
     }
   }
 
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
   if (argc>3) // edge case for invalid number of arguments
   {
     fprintf(stderr, "Invalid number of arguments (%i, maximum is 3)", argc);
-    return 1;
+    return -1;
   }
 
   int inputValidity; // variable for storing if input is valid and if some contacts has been found
@@ -249,11 +249,15 @@ int main(int argc, char *argv[]) {
   }
 
 
-
   // switch between modes
   if (argc == 3 && !strcmp(argv[1], "-s")) {
     inputValidity = findSuitableContacts(argv[2], 0);
-  } else {
+  } else if (argc==3) {
+    fprintf(stderr, "Invalid number of arguments (3, but first isn't -s)");
+    return -1;
+  }
+  
+  else {
     inputValidity = findSuitableContacts(argv[1], 1);
   }
 
