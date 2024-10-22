@@ -2,54 +2,47 @@
 // returns list of all contacts containing sequence on stdin to stdout
 // Vojtech Zmatlo (xzmatlv00), 10/2024
 
-// TODO 
-// testovani
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 
+void resetCounters(int *lenghtCounter, int* lineCounter, char *contactArray);
+bool isAdequateCharacter(char contactCharacter, char sequenceCharacter);
+bool isSuitable(char contact[], char sequenceToFind[], bool mustBeSubsequent);
+bool handleContact
+  (char contact[], char sequenceToFind[], int *lenght, int *lines, bool mustBeSubsequent);
+int printAllContacts();
+int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent);
 
-void resetCounters(int *lenghtCounter, int* lineCounter, char *contactArray)
-// resets variables keeping info about contact
-{
-  *lenghtCounter=0;
-  *lineCounter=1;
-  for (int i=0;i<201;i++) {
-    contactArray[i]=0;
+int main(int argc, char *argv[]) {
+  if (argc>3) // edge case for invalid number of arguments
+  {
+    fprintf(stderr, "Invalid number of arguments (%i, maximum is 3)", argc);
+    return 1;
   }
-}
 
-bool isAdequateCharacter(char contactCharacter, char sequenceCharacter) {
-  // returns if the contactCharacter is the same as sequenceCharacter in t9
+  int inputValidity; // variable for storing if input is valid and if some contacts has been found
 
-  // in case when numbers equal
-  if (contactCharacter==sequenceCharacter) return 1;
-
-  // getting rid of 0 in sequence character
-  if (sequenceCharacter=='0') {
-    if (contactCharacter=='+') return 1;
+  if (argc==1) // edge case if no seqeunce is entered
+  {
+    inputValidity = printAllContacts();
     return 0;
   }
 
-  int numberFromSequence = sequenceCharacter-'0';
-  char representedCharacter;
-
-  // adds i to numberFromSequence*3 to get all possible letters (skips i==4 if number represents
-  // only 3 letters and adds one for numbers above 7, returns 1 if characters match
-  for (int i=0;i<4;i++) {
-    representedCharacter = 'a'+(numberFromSequence-2)*3+i;
-    if ((i==3) && !(numberFromSequence==7 || numberFromSequence==9)) break;
-    if (numberFromSequence>7) representedCharacter++;
-    if (representedCharacter==contactCharacter) return 1;
+  // switch between modes
+  if (argc == 3 && !strcmp(argv[1], "-s")) {
+    inputValidity = findSuitableContacts(argv[2], 0);
+  } else {
+    inputValidity = findSuitableContacts(argv[1], 1);
   }
 
-  // if nothing matched, return 0
-  return 0;
+  if (!inputValidity) printf("Not found\n");  
+
+  return (inputValidity<0)?inputValidity:0;
 }
 
-bool isSuitable(char contact[], char sequenceToFind[], bool mustBeSubsequent) 
+bool isSuitable(char contact[], char sequenceToFind[], bool mustBeSubsequent)
 // Returns whether contact contains given sequence
 {
   int sequenceLenght=strlen(sequenceToFind);
@@ -95,7 +88,7 @@ bool isSuitable(char contact[], char sequenceToFind[], bool mustBeSubsequent)
 }
 
 bool handleContact
-  (char contact[], char sequenceToFind[], int *lenght, int *lines, bool mustBeSubsequent) 
+  (char contact[], char sequenceToFind[], int *lenght, int *lines, bool mustBeSubsequent)
 // handles contact for printing if sequence is found, resets temp variables
 {
   bool suitable = 0;
@@ -119,7 +112,6 @@ int printAllContacts()
   int contactLines=1;
   char currentContact[201];
   resetCounters(&contactLenght, &contactLines, currentContact);
-  
   
   while ((c=getchar())!=EOF)
   // loops through whole input
@@ -181,7 +173,6 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
   char currentContact[201];
   resetCounters(&contactLenght, &contactLines, currentContact);
   
-  
   while ((c=getchar())!=EOF)
   // loops through whole input
   {
@@ -195,6 +186,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
       currentContact[contactLenght++]=c;
     }
     lineLenght++;
+
     if (c=='\n')
     // replace \n character on first line end with ", ", end contact on second line end
     {
@@ -233,35 +225,41 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
   return isSomeContactSuitable;
 }
 
-int main(int argc, char *argv[]) {
-  if (argc>3) // edge case for invalid number of arguments
-  {
-    fprintf(stderr, "Invalid number of arguments (%i, maximum is 3)", argc);
-    return -1;
-  }
+bool isAdequateCharacter(char contactCharacter, char sequenceCharacter) 
+{
+  // returns if the contactCharacter is the same as sequenceCharacter in t9
 
-  int inputValidity; // variable for storing if input is valid and if some contacts has been found
+  // in case when numbers equal
+  if (contactCharacter==sequenceCharacter) return 1;
 
-  if (argc==1) // edge case if no seqeunce is entered
-  {
-    inputValidity = printAllContacts();
+  // getting rid of 0 in sequence character
+  if (sequenceCharacter=='0') {
+    if (contactCharacter=='+') return 1;
     return 0;
   }
 
+  int numberFromSequence = sequenceCharacter-'0';
+  char representedCharacter;
 
-  // switch between modes
-  if (argc == 3 && !strcmp(argv[1], "-s")) {
-    inputValidity = findSuitableContacts(argv[2], 0);
-  } else if (argc==3) {
-    fprintf(stderr, "Invalid number of arguments (3, but first isn't -s)");
-    return -1;
+  // adds i to numberFromSequence*3 to get all possible letters (skips i==4 if number represents
+  // only 3 letters and adds one for numbers above 7, returns 1 if characters match
+  for (int i=0;i<4;i++) {
+    representedCharacter = 'a'+(numberFromSequence-2)*3+i;
+    if ((i==3) && !(numberFromSequence==7 || numberFromSequence==9)) break;
+    if (numberFromSequence>7) representedCharacter++;
+    if (representedCharacter==contactCharacter) return 1;
   }
-  
-  else {
-    inputValidity = findSuitableContacts(argv[1], 1);
+
+  // if nothing matched, return 0
+  return 0;
+}
+
+void resetCounters(int *lenghtCounter, int* lineCounter, char *contactArray)
+// resets variables keeping info about contact
+{
+  *lenghtCounter=0;
+  *lineCounter=1;
+  for (int i=0;i<201;i++) {
+    contactArray[i]=0;
   }
-
-  if (!inputValidity) printf("Not found\n");  
-
-  return (inputValidity<0)?inputValidity:0;
 }
