@@ -18,8 +18,8 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent);
 int main(int argc, char *argv[]) {
   if (argc>3) // edge case for invalid number of arguments
   {
-    fprintf(stderr, "Invalid number of arguments (%i, maximum is 3)", argc);
-    return 1;
+    fprintf(stderr, "Invalid number of arguments (%i, maximum is 3).\n", argc);
+    return -1;
   }
 
   int inputValidity; // variable for storing if input is valid and if some contacts has been found
@@ -33,6 +33,9 @@ int main(int argc, char *argv[]) {
   // switch between modes
   if (argc == 3 && !strcmp(argv[1], "-s")) {
     inputValidity = findSuitableContacts(argv[2], 0);
+  } else if (argc==3) {
+    fprintf(stderr, "Invalid number of arguments (3, but first isn't -s). \n");
+    return -1;
   } else {
     inputValidity = findSuitableContacts(argv[1], 1);
   }
@@ -211,7 +214,7 @@ int findSuitableContacts(char sequenceToFind[], bool mustBeSubsequent)
     }
 
     // handle longer line or contact than expected
-    if (contactLenght>200||lineLenght>100) {
+    if (lineLenght>100) {
       fprintf(stderr, "Invalid input data. \n");
       return -1;
     }
